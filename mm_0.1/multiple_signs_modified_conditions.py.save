@@ -1,0 +1,151 @@
+﻿import re
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import matplotlib.animation as animation
+from matplotlib import style
+from subprocess import call
+import threading
+import pdb
+global last_displayed
+def open_file(file):
+        f = open(file,"r")
+	#skip first line
+        f2 =f.readlines()
+        f.close
+	return f2[1:]
+
+def write_tofile(f2,filename):
+        f2length=int(len(f2))
+        f = open(filename,"w+")
+        for line in range(f2length):
+                f.write("%s"%f2[line])
+        f.close()
+
+##################################################################data analytics section###################################################
+def get_agents(time_stamp,agents_list,signs_list,rangex,rangey,rangez):
+	diffx=1 #direction check sensitivity for x direction .This is important only to check the sign arrow direction .To determine if the agent continues moving in the same direction or turns right or left
+	diffy=1 #direction check sensitivity for y direction 
+	diffz=1	#direction check sensitivity for z direction
+        check_x=0 #this is changed for each sign
+        check_y=0 #this is changed for each sign
+        check_z=0 #this is changed for each sign
+
+	timestampdiff=10 #not used
+	number_of_agents=600 #not used
+	signs=[] #the list of filtered agents positions apended with the direction of the arrow and each sign direction
+#        time_stamps_list=list(dict.fromkeys(time_stamps_list))
+# this function returns the agents ids at all signs in a certain time  returned agents[sign_id] regraded that the signs are in csv file with id order in 0,1,2,3,... sample output [['1001', '1002'], ['1064', '1073']] i.e [[ids@sign0], [ids@sign1]]
+	i=1
+	#debugger
+	#pdb.set_trace()
+	min_signs=[float(agents_list[0].split(',')[2]),float(agents_list[0].split(',')[3]),float(agents_list[0].split(',')[4])]
+	max_signs=[float(agents_list[0].split(',')[2]),float(agents_list[0].split(',')[3]),float(agents_list[0].split(',')[4])]
+	for list_index in range(0,len(agents_list)):
+		line=agents_list[list_index]		
+		#finding the global minimum and maximum
+		min_signs[0]=float(line.split(',')[2]) if min_signs[0] > float(line.split(',')[2]) else min_signs[0]
+		min_signs[1]=float(line.split(',')[3]) if min_signs[1] > float(line.split(',')[3]) else min_signs[1]
+		min_signs[2]=float(line.split(',')[4]) if min_signs[2] > float(line.split(',')[4]) else min_signs[2]
+		max_signs[0]=float(line.split(',')[2]) if max_signs[0] < float(line.split(',')[2]) else max_signs[0]
+		max_signs[1]=float(line.split(',')[3]) if max_signs[1] < float(line.split(',')[3]) else max_signs[1]
+		max_signs[2]=float(line.split(',')[4]) if max_signs[2] < float(line.split(',')[4]) else max_signs[2]
+		for i in range(0,len(signs_list)):
+	                X=signs_list[i].split(',')[1]
+        	        Y=signs_list[i].split(',')[2]
+                	Z=signs_list[i].split(',')[3]
+			rangex=float(signs_list[i].split(',')[5])
+			rangey=float(signs_list[i].split(',')[6])
+			rangez=float(signs_list[i].split(',')[7])
+
+			if (1):
+				if ((float(X)-rangex)<=float(line.split(',')[2])) and (float(line.split(',')[2])<=(float(X)+rangex)) and ((float(Y)-rangey)<=float(line.split(',')[3])) and (float(line.split(',')[3])<=(float(Y)+rangey)) and ((float(Z)-rangez)<=float(line.split(',')[4])) and (float(line.split(',')[4])<=(float(Z)+rangez)):
+					signs.append(signs_list[i].split(',')[4]+","+str(i)+","+line) #append the check direction and sign id as i and agent position as line
+			#check only in z put it one to check only in z direction
+			#if (0):
+			#	if (((float(Z)-rangez)<=float(line.split(',')[4])) and (float(line.split(',')[4])<=(float(Z)+rangez))):
+			#		signs.append(str(list_index)+","+str(i)+","+line)
+
+
+	write_tofile(signs,"signs_scrampled.csv")
+	timestampdiff=10 # not used
+	number_of_agents=600 # not used
+	k=1 #not used
+	directions=[]
+	data=[]
+	# set 1 for the direction to be taken into consideration x or y or z 
+	i=0
+	#signs=open_file("./signs_scrampled.csv")
+#	data.append(signs[0]) 
+#######signs is the list of formatted agents positions 
+	for i in range(0,len(signs)):
+		if (float(signs[i].split(',')[1])!=float(k)):
+			#filename="sign_direction"+str(k)
+	                #write_tofile(directions,filename)
+			#extracting position data to files
+			directions=[]
+			k=k+1
+		j=0
+		# search for agent in list with the same id, the interesting direction to be checked pers sign
+		for j in range(0,len(signs)):
+                        if (signs[i].split(',')[0]=='x'):
+                                check_x=1
+                        if (signs[i].split(',')[0]=='y'):
+                                check_y=1
+                        if (signs[i].split(',')[0]=='z'):
+                                check_z=1
+			# same agent bigger time stamp not te same sign
+			if (check_x==1):
+				# first next sign (float(signs[j].split(',')[1])==float(signs[i].split(',')[1])+1) and
+###############################check if not the same sign , the same agent and bigger frame as a timestamp
+				if ((signs[j].split(',')[1]!=signs[i].split(',')[1]) and (signs[j].split(',')[3]==signs[i].split(',')[3]) and (float(signs[j].split(',')[2]) > float(signs[i].split(',')[2]))):			
+                               #straight condition if the difference in next position is less than diffx
+					if (float(signs[i].split(',')[4])-float(signs[j].split(',')[4])>=diffx):
+						data.append("x"+","+signs[i])
+					elif (float(signs[i].split(',')[4])-float(signs[j].split(',')[4])<=-diffx):
+                        	                data.append("-x"+","+signs[i])
+					else:
+						data.append("u"+","+signs[i])
+
+					break
+                        if (check_y==1):
+                                if ((signs[j].split(',')[1]!=signs[i].split(',')[1]) and (signs[j].split(',')[3]==signs[i].split(',')[3]) and (float(signs[j].split(',')[2]) > float(signs[i].split(',')[2]))):
+                               #straight condition if the difference in next position is less than diffx
+				#########it hould be implemented this way if the difference < -diffx then it should have goone in the negative x direction replace the else
+                                        if (float(signs[i].split(',')[5])-float(signs[j].split(',')[5])>=diffy):
+                                                data.append("x"+","+signs[i])
+                                        elif (float(signs[i].split(',')[5])-float(signs[j].split(',')[5])<=-diffy):
+                                                data.append("-x"+","+signs[i])
+					else:
+						data.append("u"+","+signs[i])
+                                        break
+#			pdb.set_trace()
+                        if (check_z==1):
+                                if ((signs[j].split(',')[1]!=signs[i].split(',')[1]) and (signs[j].split(',')[3]==signs[i].split(',')[3]) and (float(signs[j].split(',')[2]) > float(signs[i].split(',')[2]))):
+                               #straight condition if the difference in next position is less than diffx
+                                        if (float(signs[i].split(',')[6])-float(signs[j].split(',')[6])>=diffz):
+                                                data.append("x"+","+signs[i])
+					#	last_displayed[int(signs[i].split(',')[1])]="x"
+                                        elif (float(signs[i].split(',')[6])-float(signs[j].split(',')[6])<=-diffz):
+                                                data.append("-x"+","+signs[i])
+					else:
+						data.append("u"+","+signs[i])
+					#	last_displayed[int(signs[i].split(',')[1])]="-x"
+                                        break
+			#agent not found again increases ordered_display length 
+				else:
+					if (j==len(signs)-1):
+						#data.append("x"+","+signs[i])
+ 						index=int(signs[i].split(',')[1])
+						#data.append(str(last_displayed[index])+","+signs[i])	
+	write_tofile(data,"data_scrampled.csv")
+	print min_signs
+	print max_signs
+	return data
+###########################initial display##################33
+def get_initial(length,ordered_display):
+	#initial	
+	last_displayed=[2 for i in range(length)]
+	for j in range(0,length):
+		for k in range(0,len(ordered_display)):
+			if int(ordered_display[k].split(',')[2])==int(j):
+                                if (ordered_display[k].split(',')[0]=="x"):

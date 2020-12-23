@@ -1,0 +1,9 @@
+the code works in the following manner it  gets the positions of signs and the positions of the agents then gets the agents that passed the sign position at a certain time slot. then it calculates the direction to be plotted on the sign by checking the next sign the same agent crossed by at a larger time slot. the system then records the directions and timeslots of the signs in a certain file and starts a process at which the time is calculated and the sign direction is plotted.
+
+The initial conditions of each sign is taken from the stored data by plotting the first direction to be plotted n each sign.
+if a certain sign is missing direction then it plots the last plotted direction.
+the positions of agents is claculated within a certain range that could be added to the code at the first run.
+the agents must cross a certain sign to plot its direction. the signs cannot plot directions that aren't existing by the agents.
+
+
+the data is very large so the time stamps, the positions, the frame and id of agents that passed the interesting positions only (the signs positions) is stored in a smaller version of the data and extracted to file named data_scrampled.csv
